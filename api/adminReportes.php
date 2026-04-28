@@ -39,8 +39,10 @@ class AdministradorReportes extends Con
                 GROUP BY id_orden
             ) po ON po.id_orden = o.id
             LEFT JOIN (
-                SELECT id_orden, SUM(monto) AS total_pagado
-                FROM rel_pago_orden
+                SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                FROM rel_pago_orden r
+                INNER JOIN pagos p ON p.id = r.id_pago
+                WHERE (p.activo IS NULL OR p.activo = 1)
                 GROUP BY id_orden
             ) pg ON pg.id_orden = o.id
             WHERE o.fecha_entrega BETWEEN '$inicio' AND '$fin'
@@ -107,8 +109,10 @@ class AdministradorReportes extends Con
                 GROUP BY id_orden
             ) po ON po.id_orden = o.id
             LEFT JOIN (
-                SELECT id_orden, SUM(monto) AS total_pagado
-                FROM rel_pago_orden
+                SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                FROM rel_pago_orden r
+                INNER JOIN pagos p ON p.id = r.id_pago
+                WHERE (p.activo IS NULL OR p.activo = 1)
                 GROUP BY id_orden
             ) pg ON pg.id_orden = o.id
             LEFT JOIN `user` u ON u.id = o.id_cliente
@@ -139,8 +143,10 @@ class AdministradorReportes extends Con
                 GROUP BY id_orden
             ) po ON po.id_orden = o.id
             LEFT JOIN (
-                SELECT id_orden, SUM(monto) AS total_pagado
-                FROM rel_pago_orden
+                SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                FROM rel_pago_orden r
+                INNER JOIN pagos p ON p.id = r.id_pago
+                WHERE (p.activo IS NULL OR p.activo = 1)
                 GROUP BY id_orden
             ) pg ON pg.id_orden = o.id
             LEFT JOIN `user` u ON u.id = o.id_cliente

@@ -4,15 +4,15 @@ include_once "conector.php";
 
 class AdministradorPagos extends Con
 {
-    //SELECT `id`, `monto`, `id_orden`, `url_ev`, `id_usuario`, `id_inserta`, `fecha_inserta`, `id_napers` FROM `pagos` WHERE 1
+    //SELECT `id`, `monto`, `id_orden`, `url_ev`, `id_usuario`, `id_inserta`, `fecha_inserta`, `id_napers`, `tipo_pago`, `activo` FROM `pagos` WHERE 1
     public function agregarPago($monto, $id_orden, $url_ev, $id_usuario, $id_inserta, $id_napers, $tipo_pago)
     {
-        $query = "INSERT INTO `pagos`(`monto`, `id_orden`, `url_ev`, `id_usuario`, `id_inserta`, `fecha_inserta`, `id_napers`, `tipo_pago`) VALUES ($monto, $id_orden, '$url_ev', $id_usuario, $id_inserta, NOW(), '$id_napers', '$tipo_pago')";
+        $query = "INSERT INTO `pagos`(`monto`, `id_orden`, `url_ev`, `id_usuario`, `id_inserta`, `fecha_inserta`, `id_napers`, `tipo_pago`, `activo`) VALUES ($monto, $id_orden, '$url_ev', $id_usuario, $id_inserta, NOW(), '$id_napers', '$tipo_pago', 1)";
         return json_decode($this->ejecutar($query));
     }
     public function obtenerPagos()
     {
-        $query = "SELECT * FROM `pagos`";
+        $query = "SELECT * FROM `pagos` WHERE (`activo` IS NULL OR `activo` = 1)";
         return json_decode($this->ejecutar($query));
     }
     public function obtenerPago($id)
@@ -32,12 +32,12 @@ class AdministradorPagos extends Con
     }
     public function bajaPago($id)
     {
-        $query = "DELETE FROM `pagos` WHERE `id` = $id";
+        $query = "UPDATE `pagos` SET `activo`=0 WHERE `id` = $id";
         return json_decode($this->ejecutar($query));
     }
     public function obtenerPagosDeUsuario($id_usuario)
     {
-        $query = "SELECT * FROM `pagos` WHERE `id_usuario` = $id_usuario";
+        $query = "SELECT * FROM `pagos` WHERE `id_usuario` = $id_usuario ORDER BY `id` DESC";
         return json_decode($this->ejecutar($query));
     }
 
@@ -67,7 +67,8 @@ class AdministradorPagos extends Con
                 FROM rel_pago_orden AS r
                 JOIN pagos AS p
                 ON p.id = r.id_pago
-                WHERE r.id_orden = $id_orden;";
+                WHERE r.id_orden = $id_orden
+                AND (p.activo IS NULL OR p.activo = 1);";
         return json_decode($this->ejecutar($sql));
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+include_once __DIR__ . "/conector.php";
+
 class NaperzClient
 {
     private string $baseUrl = 'https://croram.naperz.mx/api/croram';
@@ -7,7 +9,11 @@ class NaperzClient
 
     private function request(string $method, string $path, ?array $body = null, array $query = [])
     {
+        $method = strtoupper($method);
+        $logContext = $method . ' ' . $path;
+
         if (!function_exists('curl_init')) {
+            $this->log("ERROR Naperz {$logContext}: La extension cURL de PHP no esta habilitada.");
             throw new Exception('La extension cURL de PHP no esta habilitada.');
         }
 
@@ -23,7 +29,7 @@ class NaperzClient
             CURLOPT_TIMEOUT => 30,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
         ];
 
@@ -38,21 +44,38 @@ class NaperzClient
         curl_close($curl);
 
         if ($response === false) {
+            $this->log("ERROR Naperz {$logContext}: " . $curlError);
             throw new Exception('Error de comunicacion con Naperz: ' . $curlError);
         }
 
         $decoded = json_decode($response);
         if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+            $this->log("ERROR Naperz {$logContext}: JSON invalido. " . substr($response, 0, 180));
             throw new Exception('Naperz respondio un JSON invalido: ' . substr($response, 0, 300));
         }
 
         $status = intval($decoded->status ?? $httpCode);
         if ($httpCode >= 400 || ($status >= 400 && $status !== 0)) {
             $message = $decoded->message ?? ('HTTP ' . $httpCode);
+            $this->log("ERROR Naperz {$logContext}: " . $message);
             throw new Exception('Naperz: ' . $message);
         }
 
+        $remoteId = isset($decoded->item->id) ? ' ID remoto ' . intval($decoded->item->id) . '.' : '';
+        $this->log("OK Naperz {$logContext}. HTTP {$httpCode}.{$remoteId}");
         return $decoded;
+    }
+
+    private function log(string $message): void
+    {
+        try {
+            $message = addslashes(substr($message, 0, 1000));
+            $con = new Con();
+            $con->ejecutar("INSERT INTO `log_napers` (`mensaje`) VALUES ('$message')");
+            $con->cerrar();
+        } catch (Throwable $e) {
+            error_log('No se pudo escribir log_napers: ' . $e->getMessage());
+        }
     }
 
     public function listClients(int $page = 1, int $pageSize = 1000)

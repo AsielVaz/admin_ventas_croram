@@ -121,6 +121,7 @@
     if (!is_array($ordenesComplex)) $ordenesComplex = [];
     if (!is_array($pagos))          $pagos = [];
     if (!is_array($autos))          $autos = [];
+    $pagosActivos = array_filter($pagos, function($p) { return intval($p->activo ?? 1) === 1; });
 
     // Original helper function
     function diasDiferencia(string $fecha): int {
@@ -156,7 +157,7 @@
                     </div>
                     <div class="uv-kpi">
                         <span class="uv-kpi-label">Pagos registrados</span>
-                        <span class="uv-kpi-value"><?php echo count($pagos); ?></span>
+                        <span class="uv-kpi-value"><?php echo count($pagosActivos); ?></span>
                     </div>
                     <div class="uv-kpi">
                         <span class="uv-kpi-label">Vehículos</span>
@@ -298,11 +299,14 @@
 
                                 <div class="table-responsive">
                                     <table class="uv-table">
-                                        <thead><tr><th>ID</th><th>Monto</th><th>Orden</th><th>Evidencia</th><th>Fecha</th><th>ID Napers</th></tr></thead>
+                                        <thead><tr><th>ID</th><th>Monto</th><th>Orden</th><th>Evidencia</th><th>Fecha</th><th>ID Napers</th><th>Estatus</th><th>Acciones</th></tr></thead>
                                         <tbody>
-                                            <?php foreach ($pagos as $pago): ?>
-                                            <tr>
-                                                <td><strong>#<?php echo intval($pago->id ?? 0); ?></strong></td>
+                                            <?php foreach ($pagos as $pago):
+                                                $pagoActivo = intval($pago->activo ?? 1) === 1;
+                                                $pagoId = intval($pago->id ?? 0);
+                                            ?>
+                                            <tr id="pago-row-<?php echo $pagoId; ?>" class="<?php echo $pagoActivo ? '' : 'table-light text-muted'; ?>">
+                                                <td><strong>#<?php echo $pagoId; ?></strong></td>
                                                 <td style="font-weight:700;color:var(--uv-success);">$<?php echo number_format(floatval($pago->monto ?? 0), 2); ?></td>
                                                 <td>#<?php echo intval($pago->id_orden ?? 0); ?></td>
                                                 <td><?php if (!empty($pago->url_ev)): ?><a href="<?php echo htmlspecialchars($pago->url_ev, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="uv-btn uv-btn-outline uv-btn-sm"><span class="material-icons-outlined">visibility</span> Ver</a><?php else: ?>—<?php endif; ?></td>
@@ -465,6 +469,64 @@
     }
 
     /* ══ Payment modal logic (original — complete) ══ */
+    function eliminarPago(id, monto) {
+        Swal.fire({
+            title: 'Eliminar pago #' + id,
+            text: 'Se desactivara el pago por $' + monto + ' y se cancelara en Naperz si tiene ID remoto.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Si, eliminar',
+            cancelButtonText: 'No'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            var fd = new FormData();
+            fd.append('id', id);
+            fd.append('accion', 'baja');
+            fetch('api/apiPagos.php', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.tipo === 'success') {
+                        Swal.fire({ title: 'Pago desactivado', icon: 'success', timer: 1500, showConfirmButton: false }).then(function() { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.mensaje || 'No se pudo desactivar el pago.', confirmButtonColor: '#dc2626' });
+                    }
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo desactivar el pago.', confirmButtonColor: '#dc2626' });
+                });
+        });
+    }
+
+    (function() {
+        document.querySelectorAll('#tab-pagos tbody tr[id^="pago-row-"]').forEach(function(row) {
+            var id = parseInt(row.id.replace('pago-row-', ''), 10);
+            var inactive = row.classList.contains('text-muted');
+            var amountCell = row.children[1];
+            var monto = amountCell ? amountCell.textContent.replace('$', '').trim() : '0.00';
+            var status = document.createElement('td');
+            status.innerHTML = '<span class="uv-status ' + (inactive ? 'cancelada' : 'entregada') + '">' + (inactive ? 'Desactivado' : 'Activo') + '</span>';
+            var actions = document.createElement('td');
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = inactive ? 'uv-btn uv-btn-outline uv-btn-sm' : 'uv-btn uv-btn-danger uv-btn-sm';
+            button.disabled = inactive;
+            button.innerHTML = inactive
+                ? 'No seleccionable'
+                : '<span class="material-icons-outlined">delete</span> Eliminar';
+            if (!inactive) {
+                button.addEventListener('click', function() {
+                    eliminarPago(id, monto);
+                });
+            }
+            actions.appendChild(button);
+            row.appendChild(status);
+            row.appendChild(actions);
+        });
+    })();
+
     (function() {
         var $form = document.getElementById('formAgregarPago');
         var $monto = document.getElementById('monto');

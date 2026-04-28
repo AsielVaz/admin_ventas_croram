@@ -105,7 +105,7 @@ function bajaPago()
         }
     }
     $adminPagos->bajaPago($id);
-    $mensaje = array("mensaje" => "Pago eliminado", "tipo" => "success", "naperz" => array("cancelado" => $idNapers > 0));
+    $mensaje = array("mensaje" => "Pago desactivado", "tipo" => "success", "naperz" => array("cancelado" => $idNapers > 0));
     echo json_encode($mensaje);
 }
 

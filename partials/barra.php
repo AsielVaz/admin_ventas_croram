@@ -59,6 +59,7 @@ if(!isset($_SESSION['usuario'])){
                           <li class="nxl-item"><a class="nxl-link" href="reportes.php">Panel de reportes</a></li>
                           <li class="nxl-item"><a class="nxl-link" href="reporte-ventas.php">Ventas detalladas</a></li>
                           <li class="nxl-item"><a class="nxl-link" href="devoluciones.php">Devoluciones</a></li>
+                          <li class="nxl-item"><a class="nxl-link" href="log-napers.php">Log Naperz</a></li>
                       </ul>
                   </li>
                   <li class="nxl-item nxl-hasmenu">

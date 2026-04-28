@@ -175,8 +175,10 @@ class AdministradorOrdenes extends Con
             LEFT JOIN `products` p ON po.id_producto = p.id
             LEFT JOIN `user` u ON o.id_cliente = u.id
             LEFT JOIN (
-                SELECT id_orden, SUM(monto) AS total_pagado
-                FROM rel_pago_orden
+                SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                FROM rel_pago_orden r
+                INNER JOIN pagos p ON p.id = r.id_pago
+                WHERE (p.activo IS NULL OR p.activo = 1)
                 GROUP BY id_orden
             ) pagos ON pagos.id_orden = o.id
             WHERE o.fecha_entrega BETWEEN '$fecha_inicio' AND '$fecha_fin'
@@ -216,8 +218,10 @@ class AdministradorOrdenes extends Con
                     GROUP BY id_orden
                 ) po ON o.id = po.id_orden
                 LEFT JOIN (
-                    SELECT id_orden, SUM(monto) AS total_pagado
-                    FROM rel_pago_orden
+                    SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                    FROM rel_pago_orden r
+                    INNER JOIN pagos p ON p.id = r.id_pago
+                    WHERE (p.activo IS NULL OR p.activo = 1)
                     GROUP BY id_orden
                 ) rp ON o.id = rp.id_orden
                 WHERE o.id_cliente = $id_usuario
@@ -256,8 +260,10 @@ class AdministradorOrdenes extends Con
                     GROUP BY id_orden
                 ) po ON o.id = po.id_orden
                 LEFT JOIN (
-                    SELECT id_orden, SUM(monto) AS total_pagado
-                    FROM rel_pago_orden
+                    SELECT r.id_orden, SUM(r.monto) AS total_pagado
+                    FROM rel_pago_orden r
+                    INNER JOIN pagos p ON p.id = r.id_pago
+                    WHERE (p.activo IS NULL OR p.activo = 1)
                     GROUP BY id_orden
                 ) rp ON o.id = rp.id_orden
                 WHERE o.id_cliente = $id_usuario
@@ -375,6 +381,7 @@ LEFT JOIN (
     -- pagos totales por usuario
     SELECT id_usuario, SUM(monto) AS total_pagado
     FROM pagos
+    WHERE (`activo` IS NULL OR `activo` = 1)
     GROUP BY id_usuario
 ) pag ON o.id_cliente = pag.id_usuario
 WHERE o.fecha_entrega BETWEEN '$fechaInicio' AND '$fechaFin'
