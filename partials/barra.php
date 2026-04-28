@@ -61,6 +61,12 @@ if(!isset($_SESSION['usuario'])){
                           <li class="nxl-item"><a class="nxl-link" href="devoluciones.php">Devoluciones</a></li>
                       </ul>
                   </li>
+                  <li class="nxl-item nxl-hasmenu">
+                      <a href="wiki.php" class="nxl-link">
+                          <span class="nxl-micon"><i class="feather-book"></i></span>
+                          <span class="nxl-mtext">Wiki</span><span class="nxl-arrow"></span>
+                      </a>
+                  </li>
                   <!-- <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
