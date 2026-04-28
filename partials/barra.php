@@ -56,13 +56,9 @@ if(!isset($_SESSION['usuario'])){
                           <span class="nxl-mtext">Reportes</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                       </a>
                       <ul class="nxl-submenu">
+                          <li class="nxl-item"><a class="nxl-link" href="reportes.php">Panel de reportes</a></li>
+                          <li class="nxl-item"><a class="nxl-link" href="reporte-ventas.php">Ventas detalladas</a></li>
                           <li class="nxl-item"><a class="nxl-link" href="devoluciones.php">Devoluciones</a></li>
-                          <li class="nxl-item"><a class="nxl-link" href="reporte-ventas.php">Reportes de ventas</a></li>
-
-                          <li class="nxl-item"><a class="nxl-link" href="proposal.html">Proposal</a></li>
-                          <li class="nxl-item"><a class="nxl-link" href="proposal-view.html">Proposal View</a></li>
-                          <li class="nxl-item"><a class="nxl-link" href="proposal-edit.html">Proposal Edit</a></li>
-                          <li class="nxl-item"><a class="nxl-link" href="proposal-create.html">Proposal Create</a></li>
                       </ul>
                   </li>
                   <!-- <li class="nxl-item nxl-hasmenu">
