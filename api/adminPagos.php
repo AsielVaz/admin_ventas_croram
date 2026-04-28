@@ -25,6 +25,11 @@ class AdministradorPagos extends Con
         $query = "UPDATE `pagos` SET `monto`=$monto,`id_orden`=$id_orden,`url_ev`='$url_ev',`id_usuario`=$id_usuario,`id_napers`='$id_napers' WHERE `id` = $id";
         return json_decode($this->ejecutar($query));
     }
+    public function actualizaIdNapers($id, $id_napers)
+    {
+        $query = "UPDATE `pagos` SET `id_napers`='$id_napers' WHERE `id` = $id";
+        return json_decode($this->ejecutar($query));
+    }
     public function bajaPago($id)
     {
         $query = "DELETE FROM `pagos` WHERE `id` = $id";

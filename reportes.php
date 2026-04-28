@@ -154,6 +154,9 @@
                     <a class="rp-btn" href="reporte-ventas.php?fecha_inicio=<?php echo urlencode($fechaInicio); ?>&fecha_fin=<?php echo urlencode($fechaFin); ?>" style="background:var(--rp-info);">
                         <span class="material-icons-outlined" style="font-size:1rem;">receipt_long</span>Ventas detallado
                     </a>
+                    <a class="rp-btn" href="api/reporte_pdf.php?fecha_inicio=<?php echo urlencode($fechaInicio); ?>&fecha_fin=<?php echo urlencode($fechaFin); ?>" style="background:var(--rp-danger);">
+                        <span class="material-icons-outlined" style="font-size:1rem;">picture_as_pdf</span>Exportar PDF
+                    </a>
                 </form>
 
                 <div class="rp-tabs">

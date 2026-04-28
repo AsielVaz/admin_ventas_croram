@@ -1,5 +1,6 @@
 <?php
 include_once "conector.php";
+include_once "naperzClient.php";
 class AdministradorUsuarios extends Con
 {
     public function dameUsuarios()
@@ -47,42 +48,31 @@ class AdministradorUsuarios extends Con
 
     public function dameUsuariosApi()
     {
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://croram.naperz.mx/api/croram/clients?key=cDkGWH6-VFpg8myZAI.0F3ozzx0B_GLZ2qiUB1hq&page=1&pageSize=100',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        return json_decode($response)->items;
+        return $this->dameClientesApi();
     }
+
+    public function dameClientesApi()
+    {
+        $naperz = new NaperzClient();
+        $response = $naperz->listClients();
+        return $response->items ?? [];
+    }
+
+    public function dameUsuariosNapersApi()
+    {
+        $naperz = new NaperzClient();
+        $response = $naperz->listUsers();
+        return $response->items ?? [];
+    }
+
     public function dameUsuarioApi($id){
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://croram.naperz.mx/api/croram/clients/'.$id.'?key=cDkGWH6-VFpg8myZAI.0F3ozzx0B_GLZ2qiUB1hq',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-        
-        $response = curl_exec($curl);
-        
-        curl_close($curl);
-        return json_decode($response);
-        
+        $naperz = new NaperzClient();
+        return $naperz->getClient(intval($id));
+    }
+
+    public function dameUsuarioNapersApi($id)
+    {
+        $naperz = new NaperzClient();
+        return $naperz->getUser(intval($id));
     }
 }

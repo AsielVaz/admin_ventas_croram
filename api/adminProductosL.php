@@ -1,6 +1,7 @@
 <?php
 
 include_once "conector.php";
+include_once "naperzClient.php";
 
 class AdministradorProductos extends Con
 {
@@ -34,22 +35,8 @@ class AdministradorProductos extends Con
     }
     public function dameProductosApi()
     {
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://croram.naperz.mx/api/croram/products?key=cDkGWH6-VFpg8myZAI.0F3ozzx0B_GLZ2qiUB1hq&page=1&pageSize=100',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        return json_decode($response)->items;
+        $naperz = new NaperzClient();
+        $response = $naperz->listProducts();
+        return $response->items ?? [];
     }
 }

@@ -4,6 +4,7 @@ include_once "adminOrdenes.php";
 include_once "notificador.php";
 include_once "adminUsuarios.php";
 include_once "adminAutos.php";
+include_once "naperzClient.php";
 
 $accion = $_POST['accion'];
 
@@ -65,66 +66,65 @@ function enviarOrdenNapers($id)
   $auto = $adminAutos->obtenerAuto($orden->id_veiculo);
   //echo json_encode($usuario);
   $productos = $adminOrdenes->dameProductosOrdenCompuestos($id);
-  $fechaEntrega = date('Y-m-d H:i:s', strtotime($orden->fecha_entrega));
-  $fechaEntrega = str_replace(" ", "T", $fechaEntrega);
-  //fecha de creacion hoy 
-  $fechaCrea = date('Y-m-d H:i:s');
-  $fechaCrea = str_replace(" ", "T", $fechaCrea);
+  $fechaEntrega = fechaNapers($orden->fecha_entrega);
+  $fechaCrea = fechaNapers(date('Y-m-d H:i:s'));
   $orden->id_cliente = $usuario->id_cliente;
   $lines = array();
   foreach ($productos as $producto) {
     $line = array(
       "productId" => (int) $producto->id_napers,
-      "quantity" => (int) $producto->cantidad,
-      "unitPrice" => (int) $producto->precio_unitario
+      "quantity" => (float) $producto->cantidad,
+      "unitPrice" => (float) $producto->precio_unitario
     );
     array_push($lines, $line);
   }
-  $curl = curl_init();
 
-  curl_setopt_array($curl, array(
-    CURLOPT_URL => 'https://croram.naperz.mx/api/croram/sale?key=cDkGWH6-VFpg8myZAI.0F3ozzx0B_GLZ2qiUB1hq&page=1&pageSize=100',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => '',
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 0,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => 'POST',
-    CURLOPT_POSTFIELDS => '{
-          "clientId": '.$orden->id_cliente.',
-          "priceListId": '.$orden->id_price_list.',
-          "userId": 19,
-          "createdDate": "'.$fechaCrea.'.123456-06:00",
-          "deliveryDate": "'.$fechaEntrega.'.123456-06:00",
-          "deliveryNote": "Prueba por favor ignorar",
-          "deliveryDriverName": "'.$orden->recolector.'",
-          "deliveryVehiclePlate": "'. $auto->placas . '",
-          "deliveryContainerTypeId": 1,
-          "lines": '.json_encode($lines, JSON_UNESCAPED_UNICODE).'
-          }',
-    CURLOPT_HTTPHEADER => array(
-      'Content-Type: application/json'
-    ),
-  ));
+  $payload = array(
+    "clientId" => intval($orden->id_cliente),
+    "priceListId" => intval($orden->id_price_list),
+    "userId" => 19,
+    "createdDate" => $fechaCrea,
+    "deliveryDate" => $fechaEntrega,
+    "deliveryNote" => $orden->detalles ?? '',
+    "deliveryDriverName" => $orden->recolector ?? '',
+    "deliveryVehiclePlate" => $auto->placas ?? '',
+    "deliveryContainerTypeId" => 1,
+    "lines" => $lines
+  );
 
-  //imprimir el json 
-  // echo '{
-  //   "clientId": '.$orden->id_cliente.',
-  //   "priceListId": '.$orden->id_price_list.',
-  //   "userId": 19,
-  //   "createdDate": "'.$fechaCrea.'.123456-06:00",
-  //   "deliveryDate": "'.$fechaEntrega.'.123456-06:00",
-  //   "deliveryNote": "Prueba por favor ignorar",
-  //   "lines": '.json_encode($lines, JSON_UNESCAPED_UNICODE).'
-  //   }';
-    
+  $response = (new NaperzClient())->createSale($payload);
+  $adminOrdenes->actualizaIdNapers($id, $response->item->id ?? 0);
+  return $response;
+}
 
-  $response = curl_exec($curl);
-   curl_close($curl);
-   $response = json_decode($response);
-   $adminOrdenes->actualizaIdNapers($id, $response->item->id);
-  //echo $response;
+function actualizarOrdenNapers($id, $fechaEntrega, $notas)
+{
+  $adminOrdenes = new AdministradorOrdenes();
+  $orden = $adminOrdenes->obtenerOrden($id);
+  $saleId = intval($orden->id_napers ?? 0);
+  if ($saleId <= 0) return null;
+
+  return (new NaperzClient())->updateSale($saleId, [
+    "deliveryDate" => fechaNapers($fechaEntrega),
+    "deliveryNote" => $notas
+  ]);
+}
+
+function cancelarOrdenNapers($id)
+{
+  $adminOrdenes = new AdministradorOrdenes();
+  $orden = $adminOrdenes->obtenerOrden($id);
+  $saleId = intval($orden->id_napers ?? 0);
+  if ($saleId <= 0) return null;
+
+  return (new NaperzClient())->cancelSale($saleId);
+}
+
+function fechaNapers($fecha)
+{
+  $timestamp = strtotime($fecha);
+  if (!$timestamp) $timestamp = time();
+  return date('Y-m-d\TH:i:s.000000P', $timestamp);
 }
 
 
@@ -140,13 +140,24 @@ function aprobarOrden()
   $periodo = explode(" - ", $periodo)[0];
   $fechaCompuesta = $fecha_cliente . " " . $periodo;
   $adminOrdenes->aprobarOrden($id, $fechaCompuesta, $notas);
-  if ($_POST['directo'] == "si") {
+  if (($_POST['directo'] ?? '') == "si") {
     $adminOrdenes->modificarEstatus($id, 99);
   }
-  enviarOrdenNapers($id);
+  $naperz = array("sincronizado" => false);
+  try {
+    $ordenActual = $adminOrdenes->obtenerOrden($id);
+    if (intval($ordenActual->id_napers ?? 0) > 0) {
+      $responseNapers = actualizarOrdenNapers($id, $fechaCompuesta, $notas);
+    } else {
+      $responseNapers = enviarOrdenNapers($id);
+    }
+    $naperz = array("sincronizado" => true, "id" => intval($responseNapers->item->id ?? 0));
+  } catch (Exception $e) {
+    $naperz = array("sincronizado" => false, "mensaje" => $e->getMessage());
+  }
   $mensajeCorreo = "Su orden con el id " . $id . " ha sido aprobada";
   mailerNot($_POST['correo'], 'Croram', 'Orden Aproada', generaCorreo($mensajeCorreo), null, null, null);
-  $mensaje = array("mensaje" => "Orden aprobada", "tipo" => "success");
+  $mensaje = array("mensaje" => "Orden aprobada", "tipo" => "success", "naperz" => $naperz);
   echo json_encode($mensaje);
 }
 
@@ -154,16 +165,27 @@ function rechazarOrden()
 {
   $id = $_POST['id'];
   $adminOrdenes = new AdministradorOrdenes();
-  $fecha_cliente = $_POST['fecha_cliente'];
-  $periodo = $_POST['periodo'];
-  $notas = $_POST['notas'];
+  $fecha_cliente = $_POST['fecha_cliente'] ?? date('Y-m-d');
+  $periodo = $_POST['periodo'] ?? '00:00 - 00:00';
+  $notas = $_POST['notas'] ?? 'Orden cancelada';
   //8:00 - 9:00
   $periodo = explode(" - ", $periodo)[0];
   $fechaCompuesta = $fecha_cliente . " " . $periodo;
+  $naperz = array("cancelado" => false);
+  try {
+    $responseNapers = cancelarOrdenNapers($id);
+    $naperz = array("cancelado" => $responseNapers !== null, "id" => intval($responseNapers->item->id ?? 0));
+  } catch (Exception $e) {
+    $mensaje = array("mensaje" => "No se pudo cancelar la orden en Naperz: " . $e->getMessage(), "tipo" => "error");
+    echo json_encode($mensaje);
+    return;
+  }
   $adminOrdenes->rechazarOrden($id, $fechaCompuesta, $notas);
   $mensajeCorreo = "Su orden con el id " . $id . " ha sido cancelada";
-  mailerNot($_POST['correo'], 'Croram', 'Orden Cancelada', generaCorreo($mensajeCorreo), null, null, null);
-  $mensaje = array("mensaje" => "Orden Cancelada", "tipo" => "success");
+  if (!empty($_POST['correo'])) {
+    mailerNot($_POST['correo'], 'Croram', 'Orden Cancelada', generaCorreo($mensajeCorreo), null, null, null);
+  }
+  $mensaje = array("mensaje" => "Orden Cancelada", "tipo" => "success", "naperz" => $naperz);
   echo json_encode($mensaje);
 }
 
