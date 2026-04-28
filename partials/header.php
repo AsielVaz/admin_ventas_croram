@@ -40,8 +40,8 @@
                     <div class="nxl-lavel-mega-menu-wrapper d-flex gap-3">
                         <!--! [Start] nxl-lavel-menu !-->
                         <div class="dropdown nxl-h-item nxl-lavel-menu">
-                            <a href="javascript:void(0);" class="avatar-text avatar-md bg-primary text-white" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                <i class="feather-plus"></i>
+                            <a href="javascript:void(0);" class="nxl-head-link me-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Menú rápido" aria-label="Menú rápido">
+                                <i class="feather-grid"></i>
                             </a>
                             <div class="dropdown-menu nxl-h-dropdown">
                                 <div class="dropdown nxl-level-menu">
@@ -412,7 +412,9 @@
                         <!--! [End] nxl-lavel-menu !-->
                         <!--! [Start] nxl-h-item nxl-mega-menu !-->
                         <div class="dropdown nxl-h-item nxl-mega-menu">
-                            <a href="javascript:void(0);" class="btn btn-light-brand" data-bs-toggle="dropdown" data-bs-auto-close="outside"> Mega Menu </a>
+                            <a href="javascript:void(0);" class="btn btn-light-brand" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                <i class="feather-grid me-2"></i>Módulos
+                            </a>
                             <div class="dropdown-menu nxl-h-dropdown" id="mega-menu-dropdown">
                                 <div class="d-lg-flex align-items-start">
                                     <!--! [Start] nxl-mega-menu-tabs !-->
@@ -1975,4 +1977,78 @@
             </div>
             <!--! [End] Header Right !-->
         </div>
+        <script>
+        (function() {
+            var quickMenu = document.querySelector('.nxl-lavel-menu > .dropdown-menu');
+            var megaMenu = document.getElementById('mega-menu-dropdown');
+
+            if (quickMenu) {
+                quickMenu.innerHTML = `
+                    <a href="ordenes-crear.php" class="dropdown-item">
+                        <i class="feather-plus-circle"></i>
+                        <span>Crear orden</span>
+                    </a>
+                    <a href="ordenes-ver.php" class="dropdown-item">
+                        <i class="feather-shopping-cart"></i>
+                        <span>Ver ordenes</span>
+                    </a>
+                    <a href="usuarios.php" class="dropdown-item">
+                        <i class="feather-users"></i>
+                        <span>Usuarios</span>
+                    </a>
+                    <a href="productos.php" class="dropdown-item">
+                        <i class="feather-package"></i>
+                        <span>Productos</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="reportes.php" class="dropdown-item">
+                        <i class="feather-bar-chart-2"></i>
+                        <span>Panel de reportes</span>
+                    </a>
+                    <a href="wiki.php" class="dropdown-item">
+                        <i class="feather-book-open"></i>
+                        <span>Wiki para empleados</span>
+                    </a>
+                `;
+            }
+
+            if (megaMenu) {
+                megaMenu.innerHTML = `
+                    <div class="p-3" style="min-width:min(760px,calc(100vw - 2rem));">
+                        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Módulos Croram</h6>
+                                <p class="fs-12 text-muted mb-0">Accesos directos a las herramientas reales del sistema.</p>
+                            </div>
+                            <a href="wiki.php" class="fs-12 fw-bold text-primary">Abrir wiki &rarr;</a>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <h6 class="dropdown-item-title">Ordenes</h6>
+                                <a href="ordenes-crear.php" class="dropdown-item"><i class="wd-5 ht-5 bg-primary rounded-circle me-3"></i><span>Crear orden</span></a>
+                                <a href="ordenes-ver.php" class="dropdown-item"><i class="wd-5 ht-5 bg-primary rounded-circle me-3"></i><span>Ver ordenes</span></a>
+                                <a href="moderacion.php" class="dropdown-item"><i class="wd-5 ht-5 bg-primary rounded-circle me-3"></i><span>Moderacion</span></a>
+                                <a href="devoluciones.php" class="dropdown-item"><i class="wd-5 ht-5 bg-primary rounded-circle me-3"></i><span>Devoluciones</span></a>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="dropdown-item-title">Catalogos</h6>
+                                <a href="usuarios.php" class="dropdown-item"><i class="wd-5 ht-5 bg-success rounded-circle me-3"></i><span>Usuarios</span></a>
+                                <a href="productos.php" class="dropdown-item"><i class="wd-5 ht-5 bg-success rounded-circle me-3"></i><span>Productos</span></a>
+                                <a href="vehiculos.php" class="dropdown-item"><i class="wd-5 ht-5 bg-success rounded-circle me-3"></i><span>Vehiculos</span></a>
+                                <a href="ofertas.php" class="dropdown-item"><i class="wd-5 ht-5 bg-success rounded-circle me-3"></i><span>Ofertas</span></a>
+                                <a href="sets.php" class="dropdown-item"><i class="wd-5 ht-5 bg-success rounded-circle me-3"></i><span>Sets de precios</span></a>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="dropdown-item-title">Analisis y soporte</h6>
+                                <a href="reportes.php" class="dropdown-item"><i class="wd-5 ht-5 bg-warning rounded-circle me-3"></i><span>Panel de reportes</span></a>
+                                <a href="reporte-ventas.php" class="dropdown-item"><i class="wd-5 ht-5 bg-warning rounded-circle me-3"></i><span>Ventas detalladas</span></a>
+                                <a href="wiki.php#napers" class="dropdown-item"><i class="wd-5 ht-5 bg-warning rounded-circle me-3"></i><span>Integracion Naperz</span></a>
+                                <a href="wiki.php#incidencias" class="dropdown-item"><i class="wd-5 ht-5 bg-warning rounded-circle me-3"></i><span>Incidencias comunes</span></a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        })();
+        </script>
     </header>
